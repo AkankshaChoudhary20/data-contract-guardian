@@ -1,0 +1,23 @@
+{
+  "allow_extra": false,
+  "fields": {
+    "id": {
+      "type": "integer",
+      "unique": true
+    },
+    "email": {
+      "type": "string"
+    },
+    "plan": {
+      "type": "string",
+      "enum": [
+        "free",
+        "pro"
+      ]
+    },
+    "spend": {
+      "type": "number",
+      "min": 0
+    }
+  }
+}
