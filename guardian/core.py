@@ -35,9 +35,18 @@ def check_contract(contract):
             raise ValueError(f'{name}.min exceeds max.')
     return contract
 
+def _unique_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f'Duplicate JSON field: {key}')
+        result[key] = value
+    return result
+
+
 def parse_data(content, format):
     if format == 'json':
-        rows = json.loads(content, parse_constant=lambda s: (_ for _ in ()).throw(ValueError(f'Invalid JSON constant: {s}')))
+        rows = json.loads(content, object_pairs_hook=_unique_object, parse_constant=lambda s: (_ for _ in ()).throw(ValueError(f'Invalid JSON constant: {s}')))
         if not isinstance(rows, list):
             raise ValueError('JSON data must be an array of objects.')
     elif format == 'csv':

@@ -31,4 +31,10 @@ class CoreTests(unittest.TestCase):
         relaxed = {'fields': {'value': {'type': 'number', 'enum': [1, 1.0]}}}
         self.assertFalse(compare(old, relaxed)['breaking'])
 
+    def test_json_duplicate_fields_cannot_hide_invalid_values(self):
+        for content in ['[{"id":"bad","id":1}]', '[{"id":1,"nested":{"a":1,"a":2}}]']:
+            with self.subTest(content=content), self.assertRaisesRegex(ValueError, 'Duplicate JSON field'):
+                parse_data(content, 'json')
+        self.assertEqual(parse_data('[{"id":1},{"id":2}]', 'json'), [{'id':1}, {'id':2}])
+
 if __name__=='__main__':unittest.main()
