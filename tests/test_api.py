@@ -18,4 +18,8 @@ class ApiTests(unittest.TestCase):
     def test_invalid_schema_and_missing_contract(self):
         self.assertEqual(self.client.post('/api/contracts',json={'name':'x','schema':{}}).status_code,400)
         self.assertEqual(self.client.post('/api/validate',json={'contract_id':999,'content':'[]'}).status_code,404)
+    def test_malformed_type_returns_400_instead_of_crashing(self):
+        response=self.client.post('/api/contracts',json={'name':'invalid','schema':{'fields':{'id':{'type':[]}}}})
+        self.assertEqual(response.status_code,400)
+
 if __name__=='__main__':unittest.main()

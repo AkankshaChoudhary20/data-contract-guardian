@@ -6,6 +6,11 @@ import math
 TYPES = {'string', 'integer', 'number', 'boolean'}
 MAX_ROWS = 10000
 
+def finite_number(value):
+    # Python integers are unbounded; converting a valid large int to float
+    # just to call isfinite can itself raise OverflowError.
+    return type(value) is int or (type(value) is float and math.isfinite(value))
+
 def check_contract(contract):
     if not isinstance(contract, dict) or not isinstance(contract.get('fields'), dict) or not contract['fields']:
         raise ValueError('Contract must contain a nonempty fields object.')
@@ -14,7 +19,7 @@ def check_contract(contract):
     if 'allow_extra' in contract and not isinstance(contract['allow_extra'], bool):
         raise ValueError('allow_extra must be boolean.')
     for name, rule in contract['fields'].items():
-        if not name or not isinstance(rule, dict) or rule.get('type') not in TYPES:
+        if not isinstance(name, str) or not name or not isinstance(rule, dict) or not isinstance(rule.get('type'), str) or rule['type'] not in TYPES:
             raise ValueError(f'Invalid field rule: {name}')
         if set(rule) - {'type', 'required', 'nullable', 'unique', 'enum', 'min', 'max'}:
             raise ValueError(f'Unknown constraint for {name}.')
@@ -24,7 +29,7 @@ def check_contract(contract):
         if 'enum' in rule and (not isinstance(rule['enum'], list) or not rule['enum']):
             raise ValueError(f'{name}.enum must be a nonempty list.')
         for bound in ('min','max'):
-            if bound in rule and (rule['type'] not in {'number','integer'} or type(rule[bound]) not in (float,int) or not math.isfinite(rule[bound])):
+            if bound in rule and (rule['type'] not in {'number','integer'} or not finite_number(rule[bound])):
                 raise ValueError(f'{name}.{bound} must be a finite numeric constraint.')
         if 'min' in rule and 'max' in rule and rule['min'] > rule['max']:
             raise ValueError(f'{name}.min exceeds max.')
@@ -62,7 +67,7 @@ def convert(value, kind, csv_mode):
                 value = value.lower() == 'true'
         except (ValueError, TypeError, AttributeError): return False, value
     valid = {'string': isinstance(value,str), 'integer': type(value) is int,
-             'number': type(value) in (int,float) and math.isfinite(value), 'boolean': type(value) is bool}[kind]
+             'number': finite_number(value), 'boolean': type(value) is bool}[kind]
     return valid, value
 
 def validate(contract, rows, csv_mode=False):
