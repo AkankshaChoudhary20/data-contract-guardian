@@ -114,8 +114,12 @@ def compare(old, new):
             if not previous.get(key,default) and rule.get(key,default): add(field,f'{key} constraint tightened.',True)
         if previous.get('nullable',False) and not rule.get('nullable',False): add(field,'Nullability tightened.',True)
         for key in ['min','max','enum']:
-            if previous.get(key) != rule.get(key):
-                tightening = key in rule and (key not in previous or (key == 'min' and rule[key] > previous[key]) or (key == 'max' and rule[key] < previous[key]) or (key == 'enum' and any(x not in rule[key] for x in previous[key])))
+            # Python considers 1 == 1.0 == True; enum validation distinguishes types.
+            changed = previous.get(key) != rule.get(key)
+            if key == 'enum':
+                changed = json.dumps(previous.get(key)) != json.dumps(rule.get(key))
+            if changed:
+                tightening = key in rule and (key not in previous or (key == 'min' and rule[key] > previous[key]) or (key == 'max' and rule[key] < previous[key]) or (key == 'enum' and any(not any(type(x) is type(y) and x == y for y in rule[key]) for x in previous[key])))
                 add(field,f'{key} changed.',tightening)
         if previous != rule and not any(c['field'] == field for c in changes): add(field,'Constraints changed.',False)
     for field in set(old['fields']) - set(new['fields']): add(field,'Field removed.',not new.get('allow_extra',False))
