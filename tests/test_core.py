@@ -22,4 +22,13 @@ class CoreTests(unittest.TestCase):
         self.assertTrue(compare(self.schema,{'fields':{**self.schema['fields'],'name':{'type':'string'}}})['breaking'])
     def test_truncation(self):
         r=validate(self.schema,[{}]*600);self.assertEqual(len(r['issues']),500);self.assertEqual(r['issue_count'],1200)
+    def test_enum_comparison_matches_validation_type_semantics(self):
+        old = {'fields': {'value': {'type': 'number', 'enum': [1]}}}
+        new = {'fields': {'value': {'type': 'number', 'enum': [1.0]}}}
+        self.assertTrue(validate(old, [{'value': 1}])['valid'])
+        self.assertFalse(validate(new, [{'value': 1}])['valid'])
+        self.assertTrue(compare(old, new)['breaking'])
+        relaxed = {'fields': {'value': {'type': 'number', 'enum': [1, 1.0]}}}
+        self.assertFalse(compare(old, relaxed)['breaking'])
+
 if __name__=='__main__':unittest.main()
