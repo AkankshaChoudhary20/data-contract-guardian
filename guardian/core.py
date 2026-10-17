@@ -109,7 +109,9 @@ def validate(contract, rows, csv_mode=False):
             if 'min' in rule and value < rule['min']: issue(index,name,'min','Value is below minimum.')
             if 'max' in rule and value > rule['max']: issue(index,name,'max','Value exceeds maximum.')
             if rule.get('unique',False):
-                key = json.dumps(value,sort_keys=True)
+                # Numeric equality must agree with the number type: 1 and 1.0
+                # represent the same value, including negative and positive zero.
+                key = value if rule['type'] in {'number', 'integer'} else json.dumps(value,sort_keys=True)
                 if key in seen[name]: issue(index,name,'duplicate','Duplicate field value.')
                 seen[name].add(key)
     return {'valid': total == 0, 'rows':len(rows), 'invalid_rows':len(bad_rows), 'issue_count':total,
@@ -139,3 +141,4 @@ def compare(old, new):
     for field in set(old['fields']) - set(new['fields']): add(field,'Field removed.',not new.get('allow_extra',False))
     if old.get('allow_extra',False) != new.get('allow_extra',False): add('*','Extra-field policy changed.',not new.get('allow_extra',False))
     return {'breaking':any(c['breaking'] for c in changes),'changes':changes}
+
