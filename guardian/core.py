@@ -19,7 +19,7 @@ def check_contract(contract):
     if 'allow_extra' in contract and not isinstance(contract['allow_extra'], bool):
         raise ValueError('allow_extra must be boolean.')
     for name, rule in contract['fields'].items():
-        if not isinstance(name, str) or not name or not isinstance(rule, dict) or not isinstance(rule.get('type'), str) or rule['type'] not in TYPES:
+        if not isinstance(name, str) or not name.strip() or not isinstance(rule, dict) or not isinstance(rule.get('type'), str) or rule['type'] not in TYPES:
             raise ValueError(f'Invalid field rule: {name}')
         if set(rule) - {'type', 'required', 'nullable', 'unique', 'enum', 'min', 'max'}:
             raise ValueError(f'Unknown constraint for {name}.')
