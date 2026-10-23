@@ -50,16 +50,19 @@ def parse_data(content, format):
         if not isinstance(rows, list):
             raise ValueError('JSON data must be an array of objects.')
     elif format == 'csv':
-        reader = csv.DictReader(io.StringIO(content))
-        if not reader.fieldnames or len(set(reader.fieldnames)) != len(reader.fieldnames) or any(not f for f in reader.fieldnames):
-            raise ValueError('CSV must have nonempty, unique column headers.')
-        rows = []
-        for row in reader:
-            if None in row or any(v is None for v in row.values()):
-                raise ValueError('CSV row width differs from its header.')
-            rows.append(row)
-            if len(rows) > MAX_ROWS:
-                raise ValueError('Maximum dataset size is 10,000 rows.')
+        reader = csv.DictReader(io.StringIO(content), strict=True)
+        try:
+            if not reader.fieldnames or len(set(reader.fieldnames)) != len(reader.fieldnames) or any(not f for f in reader.fieldnames):
+                raise ValueError('CSV must have nonempty, unique column headers.')
+            rows = []
+            for row in reader:
+                if None in row or any(v is None for v in row.values()):
+                    raise ValueError('CSV row width differs from its header.')
+                rows.append(row)
+                if len(rows) > MAX_ROWS:
+                    raise ValueError('Maximum dataset size is 10,000 rows.')
+        except csv.Error as error:
+            raise ValueError(f'Malformed CSV near line {reader.line_num}: {error}') from error
     else:
         raise ValueError('Format must be json or csv.')
     if len(rows) > MAX_ROWS or any(not isinstance(r, dict) for r in rows):
