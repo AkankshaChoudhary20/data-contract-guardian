@@ -44,9 +44,16 @@ def _unique_object(pairs):
     return result
 
 
+def _finite_json_float(text):
+    value = float(text)
+    if not math.isfinite(value):
+        raise ValueError('JSON number exceeds the finite floating-point range.')
+    return value
+
+
 def parse_data(content, format):
     if format == 'json':
-        rows = json.loads(content, object_pairs_hook=_unique_object, parse_constant=lambda s: (_ for _ in ()).throw(ValueError(f'Invalid JSON constant: {s}')))
+        rows = json.loads(content, parse_float=_finite_json_float, object_pairs_hook=_unique_object, parse_constant=lambda s: (_ for _ in ()).throw(ValueError(f'Invalid JSON constant: {s}')))
         if not isinstance(rows, list):
             raise ValueError('JSON data must be an array of objects.')
     elif format == 'csv':
