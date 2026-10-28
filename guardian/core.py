@@ -57,7 +57,7 @@ def parse_data(content, format):
         if not isinstance(rows, list):
             raise ValueError('JSON data must be an array of objects.')
     elif format == 'csv':
-        reader = csv.DictReader(io.StringIO(content), strict=True)
+        reader = csv.DictReader(io.StringIO(content.removeprefix('\ufeff')), strict=True)
         try:
             if not reader.fieldnames or len(set(reader.fieldnames)) != len(reader.fieldnames) or any(not f for f in reader.fieldnames):
                 raise ValueError('CSV must have nonempty, unique column headers.')
