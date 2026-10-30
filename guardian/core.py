@@ -59,7 +59,7 @@ def parse_data(content, format):
     elif format == 'csv':
         reader = csv.DictReader(io.StringIO(content.removeprefix('\ufeff'), newline=''), strict=True)
         try:
-            if not reader.fieldnames or len(set(reader.fieldnames)) != len(reader.fieldnames) or any(not f for f in reader.fieldnames):
+            if not reader.fieldnames or len(set(reader.fieldnames)) != len(reader.fieldnames) or any(not f.strip() for f in reader.fieldnames):
                 raise ValueError('CSV must have nonempty, unique column headers.')
             rows = []
             for row in reader:
@@ -151,4 +151,3 @@ def compare(old, new):
     for field in set(old['fields']) - set(new['fields']): add(field,'Field removed.',not new.get('allow_extra',False))
     if old.get('allow_extra',False) != new.get('allow_extra',False): add('*','Extra-field policy changed.',not new.get('allow_extra',False))
     return {'breaking':any(c['breaking'] for c in changes),'changes':changes}
-
