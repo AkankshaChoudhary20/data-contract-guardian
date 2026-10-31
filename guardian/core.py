@@ -143,11 +143,16 @@ def compare(old, new):
             # Python considers 1 == 1.0 == True; enum validation distinguishes types.
             changed = previous.get(key) != rule.get(key)
             if key == 'enum':
-                changed = json.dumps(previous.get(key)) != json.dumps(rule.get(key))
+                # Enum order and repeated options do not change allowed values.
+                # Keep the type-sensitive equality used during validation.
+                old_values, new_values = previous.get(key), rule.get(key)
+                changed = (old_values is None) != (new_values is None)
+                if old_values is not None and new_values is not None:
+                    changed = any(not any(type(x) is type(y) and x == y for y in new_values) for x in old_values) or any(not any(type(x) is type(y) and x == y for y in old_values) for x in new_values)
             if changed:
                 tightening = key in rule and (key not in previous or (key == 'min' and rule[key] > previous[key]) or (key == 'max' and rule[key] < previous[key]) or (key == 'enum' and any(not any(type(x) is type(y) and x == y for y in rule[key]) for x in previous[key])))
                 add(field,f'{key} changed.',tightening)
-        if previous != rule and not any(c['field'] == field for c in changes): add(field,'Constraints changed.',False)
+        if {k: v for k, v in previous.items() if k != 'enum'} != {k: v for k, v in rule.items() if k != 'enum'} and not any(c['field'] == field for c in changes): add(field,'Constraints changed.',False)
     for field in set(old['fields']) - set(new['fields']): add(field,'Field removed.',not new.get('allow_extra',False))
     if old.get('allow_extra',False) != new.get('allow_extra',False): add('*','Extra-field policy changed.',not new.get('allow_extra',False))
     return {'breaking':any(c['breaking'] for c in changes),'changes':changes}
