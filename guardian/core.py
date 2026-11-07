@@ -135,7 +135,8 @@ def compare(old, new):
         previous = old['fields'].get(field)
         if previous is None:
             add(field,'Field added.',rule.get('required',True)); continue
-        if previous['type'] != rule['type']: add(field,'Type changed.',True)
+        if previous['type'] != rule['type']:
+            add(field,'Type changed.',(previous['type'], rule['type']) != ('integer', 'number'))
         for key, default in [('required',True),('unique',False)]:
             if not previous.get(key,default) and rule.get(key,default): add(field,f'{key} constraint tightened.',True)
         if previous.get('nullable',False) and not rule.get('nullable',False): add(field,'Nullability tightened.',True)
