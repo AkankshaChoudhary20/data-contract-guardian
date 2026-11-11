@@ -28,6 +28,12 @@ def check_contract(contract):
                 raise ValueError(f'{name}.{flag} must be boolean.')
         if 'enum' in rule and (not isinstance(rule['enum'], list) or not rule['enum']):
             raise ValueError(f'{name}.enum must be a nonempty list.')
+        if 'enum' in rule:
+            for option in rule['enum']:
+                if option is None or type(option) in (str, bool, int):
+                    continue
+                if type(option) is not float or not math.isfinite(option):
+                    raise ValueError(f'{name}.enum must contain finite scalar values.')
         for bound in ('min','max'):
             if bound in rule and (rule['type'] not in {'number','integer'} or not finite_number(rule[bound])):
                 raise ValueError(f'{name}.{bound} must be a finite numeric constraint.')
