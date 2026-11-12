@@ -84,7 +84,7 @@ def convert(value, kind, csv_mode):
             elif kind == 'boolean':
                 if value.lower() not in ('true','false'): return False, value
                 value = value.lower() == 'true'
-        except (ValueError, TypeError, AttributeError): return False, value
+        except (ValueError, TypeError, AttributeError, OverflowError): return False, value
     valid = {'string': isinstance(value,str), 'integer': type(value) is int,
              'number': finite_number(value), 'boolean': type(value) is bool}[kind]
     return valid, value
