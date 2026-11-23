@@ -11,9 +11,9 @@ def main():
     args=parser.parse_args()
     try:
         if args.command=='validate':
-            report=validate(json.loads(Path(args.contract).read_text()),parse_data(Path(args.data).read_text(),args.format),args.format=='csv');failed=not report['valid']
+            report=validate(json.loads(Path(args.contract).read_text(encoding="utf-8-sig")),parse_data(Path(args.data).read_text(encoding="utf-8-sig"),args.format),args.format=='csv');failed=not report['valid']
         else:
-            report=compare(json.loads(Path(args.old).read_text()),json.loads(Path(args.new).read_text()));failed=report['breaking']
+            report=compare(json.loads(Path(args.old).read_text(encoding="utf-8-sig")),json.loads(Path(args.new).read_text(encoding="utf-8-sig")));failed=report['breaking']
         print(json.dumps(report,indent=2));return int(failed)
     except (ValueError,OSError) as error:
         print(json.dumps({'error':str(error)}));return 2
